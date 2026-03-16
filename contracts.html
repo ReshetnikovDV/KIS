@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Договоры · Управление закупками</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+  <!-- Навбар -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="index.html">
+        <i class="fas fa-tshirt"></i> Пока не придумали <span class="text-info">швейное производство</span>
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item"><a class="nav-link" href="index.html"><i class="fas fa-home"></i> Главная</a></li>
+          <li class="nav-item"><a class="nav-link" href="suppliers.html"><i class="fas fa-truck"></i> Поставщики</a></li>
+          <li class="nav-item"><a class="nav-link" href="contracts.html"><i class="fas fa-file-contract"></i> Договоры</a></li>
+          <li class="nav-item"><a class="nav-link" href="warehouse.html"><i class="fas fa-box"></i> Склад</a></li>
+          <li class="nav-item"><a class="nav-link" href="finance.html"><i class="fas fa-coins"></i> Финансы</a></li>
+          <li class="nav-item"><a class="nav-link" href="analytics.html"><i class="fas fa-chart-line"></i> Аналитика</a></li>
+          <li class="nav-item"><a class="nav-link" href="admin.html"><i class="fas fa-cogs"></i> Админ</a></li>
+        </ul>
+        <span class="navbar-text">
+          <i class="fas fa-user"></i> Аккаунт
+        </span>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container my-4">
+    <div class="d-flex align-items-center mb-4">
+      <i class="fas fa-file-contract fa-2x text-primary me-3"></i>
+      <h1>Договоры и заказы</h1>
+    </div>
+
+    <!-- вкладки статусов (можно сделать активные через JS) -->
+    <ul class="nav nav-pills mb-3">
+      <li class="nav-item"><a class="nav-link active" href="#">Все (128)</a></li>
+      <li class="nav-item"><a class="nav-link" href="#">Создан</a></li>
+      <li class="nav-item"><a class="nav-link" href="#">На согласовании</a></li>
+      <li class="nav-item"><a class="nav-link" href="#">Утверждён</a></li>
+      <li class="nav-item"><a class="nav-link" href="#">Подписан</a></li>
+      <li class="nav-item"><a class="nav-link" href="#">Аннулирован</a></li>
+    </ul>
+
+    <div class="row mb-3">
+      <div class="col-md-6">
+        <input type="text" class="form-control" placeholder="Поиск по номеру, поставщику...">
+      </div>
+      <div class="col-md-6 text-end">
+        <button class="btn btn-primary"><i class="fas fa-plus"></i> Новый договор</button>
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-striped">
+        <thead class="table-light">
+          <tr>
+            <th>№ договора</th>
+            <th>Поставщик</th>
+            <th>Сумма</th>
+            <th>Дата</th>
+            <th>Срок поставки</th>
+            <th>Статус</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="contractsTableBody">
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card mt-4">
+      <div class="card-body">
+        <h5 class="card-title">Ближайшие сроки поставки</h5>
+        <div id="deliveryWarnings"></div>
+      </div>
+    </div>
+  </main>
+
+    <!-- Футер (перед закрывающим body) -->
+    <footer class="bg-dark text-light pt-4 pb-2 mt-5">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-4">
+          <h5>Модули</h5>
+          <ul class="list-unstyled">
+            <li><a href="suppliers.html" class="text-light">Поставщики</a></li>
+            <li><a href="contracts.html" class="text-light">Договоры</a></li>
+            <li><a href="warehouse.html" class="text-light">Склад</a></li>
+            <li><a href="finance.html" class="text-light">Финансы</a></li>
+            <li><a href="analytics.html" class="text-light">Аналитика</a></li>
+            <li><a href="admin.html" class="text-light">Администрирование</a></li>
+          </ul>
+        </div>
+        <div class="col-md-4">
+          <h5>Информация</h5>
+          <ul class="list-unstyled">
+            <li><a href="index.html" class="text-light">О системе</a></li>
+            <li><a href="#" class="text-light">Документация</a></li>
+            <li><a href="#" class="text-light">Поддержка</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="text-center pt-3 border-top border-secondary">
+        <i class="fas fa-copyright"></i> 2026 ООО «Пока не придумали». Система управления закупками.
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    const API_BASE = 'http://localhost:8000';
+
+    async function loadContracts() {
+      try {
+        const res = await fetch(`${API_BASE}/contracts/`);
+        const contracts = await res.json();
+        const tbody = document.getElementById('contractsTableBody');
+        const warningsDiv = document.getElementById('deliveryWarnings');
+        tbody.innerHTML = '';
+        warningsDiv.innerHTML = '';
+
+        const now = new Date();
+        contracts.forEach(c => {
+          // Статус бейдж
+          const statusClass = {
+            'создан': 'bg-secondary',
+            'утверждён': 'bg-success',
+            'подписан': 'bg-primary',
+            'аннулирован': 'bg-danger',
+            'на согласовании': 'bg-warning text-dark'
+          }[c.status?.toLowerCase()] || 'bg-light';
+
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td><strong>${c.contract_number}</strong></td>
+            <td>Поставщик ID ${c.supplier_id}</td>
+            <td>${c.total_amount?.toLocaleString() || '0'} ₽</td>
+            <td>${c.date}</td>
+            <td>—</td>
+            <td><span class="badge ${statusClass}">${c.status}</span></td>
+            <td><i class="fas fa-eye text-info me-2"></i><i class="fas fa-edit text-warning"></i></td>
+          `;
+          tbody.appendChild(row);
+
+          // Простая проверка просрочки (если есть delivery_terms – но у нас нет, пропускаем)
+        });
+      } catch (error) {
+        console.error('Ошибка загрузки договоров:', error);
+      }
+    }
+
+    loadContracts();
+  </script>
+</body>
+</html>

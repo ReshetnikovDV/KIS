@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Финансы · Управление закупками</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+  <!-- Навбар -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="index.html">
+        <i class="fas fa-tshirt"></i> Пока не придумали <span class="text-info">швейное производство</span>
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item"><a class="nav-link" href="index.html"><i class="fas fa-home"></i> Главная</a></li>
+          <li class="nav-item"><a class="nav-link" href="suppliers.html"><i class="fas fa-truck"></i> Поставщики</a></li>
+          <li class="nav-item"><a class="nav-link" href="contracts.html"><i class="fas fa-file-contract"></i> Договоры</a></li>
+          <li class="nav-item"><a class="nav-link" href="warehouse.html"><i class="fas fa-box"></i> Склад</a></li>
+          <li class="nav-item"><a class="nav-link" href="finance.html"><i class="fas fa-coins"></i> Финансы</a></li>
+          <li class="nav-item"><a class="nav-link" href="analytics.html"><i class="fas fa-chart-line"></i> Аналитика</a></li>
+          <li class="nav-item"><a class="nav-link" href="admin.html"><i class="fas fa-cogs"></i> Админ</a></li>
+        </ul>
+        <span class="navbar-text">
+          <i class="fas fa-user"></i> Аккаунт
+        </span>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container my-4">
+    <div class="d-flex align-items-center mb-4">
+      <i class="fas fa-coins fa-2x text-primary me-3"></i>
+      <h1>Финансы и расчёты</h1>
+    </div>
+
+    <div class="row mb-4">
+      <div class="col-md-6">
+        <div class="card text-white bg-danger">
+          <div class="card-body">
+            <h5 class="card-title">Кредиторская задолженность</h5>
+            <p class="card-text display-6" id="totalDebt">0 ₽</p>
+            <p>Просроченная: <span id="overdueDebt">0 ₽</span></p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card text-white bg-info">
+          <div class="card-body">
+            <h5 class="card-title">Платежи в этом месяце</h5>
+            <p class="card-text display-6" id="monthPayments">0 ₽</p>
+            <p>Оплачено: <span id="paidMonth">0 ₽</span></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h2>Реестр платежей</h2>
+    <div class="table-responsive">
+      <table class="table table-striped">
+        <thead>
+          <tr><th>Поставщик</th><th>Сумма</th><th>Дата</th><th>Договор</th><th>Статус</th></tr>
+        </thead>
+        <tbody id="paymentsTableBody">
+        </tbody>
+      </table>
+    </div>
+
+    <button class="btn btn-primary"><i class="fas fa-file-invoice"></i> Новый платёж</button>
+    <button class="btn btn-outline-primary"><i class="fas fa-file-excel"></i> Реестр платежей</button>
+  </main>
+
+  <!-- Футер (перед закрывающим body) -->
+<footer class="bg-dark text-light pt-4 pb-2 mt-5">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-4">
+          <h5>Модули</h5>
+          <ul class="list-unstyled">
+            <li><a href="suppliers.html" class="text-light">Поставщики</a></li>
+            <li><a href="contracts.html" class="text-light">Договоры</a></li>
+            <li><a href="warehouse.html" class="text-light">Склад</a></li>
+            <li><a href="finance.html" class="text-light">Финансы</a></li>
+            <li><a href="analytics.html" class="text-light">Аналитика</a></li>
+            <li><a href="admin.html" class="text-light">Администрирование</a></li>
+          </ul>
+        </div>
+        <div class="col-md-4">
+          <h5>Информация</h5>
+          <ul class="list-unstyled">
+            <li><a href="index.html" class="text-light">О системе</a></li>
+            <li><a href="#" class="text-light">Документация</a></li>
+            <li><a href="#" class="text-light">Поддержка</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="text-center pt-3 border-top border-secondary">
+        <i class="fas fa-copyright"></i> 2026 ООО «Пока не придумали». Система управления закупками.
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    const API_BASE = 'http://localhost:8000';
+
+    async function loadFinance() {
+      try {
+        // Кредиторка
+        const debtRes = await fetch(`${API_BASE}/analytics/accounts-payable`);
+        const debts = await debtRes.json();
+        let total = 0;
+        debts.forEach(d => total += d.debt);
+        document.getElementById('totalDebt').textContent = Math.round(total).toLocaleString() + ' ₽';
+        // Просрочка не реализована в API, оставляем заглушку
+
+        // Платежи
+        const paymentsRes = await fetch(`${API_BASE}/payments/`);
+        const payments = await paymentsRes.json();
+        const tbody = document.getElementById('paymentsTableBody');
+        tbody.innerHTML = '';
+        payments.forEach(p => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>Поставщик ID ${p.contract_id}</td>
+            <td>${p.amount.toLocaleString()} ₽</td>
+            <td>${p.payment_date}</td>
+            <td>Договор ID ${p.contract_id}</td>
+            <td><span class="badge bg-success">${p.status}</span></td>
+          `;
+          tbody.appendChild(row);
+        });
+
+        // Сумма платежей за текущий месяц (просто для примера)
+        const now = new Date();
+        const monthTotal = payments
+          .filter(p => p.payment_date.startsWith(now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0')))
+          .reduce((sum, p) => sum + p.amount, 0);
+        document.getElementById('monthPayments').textContent = Math.round(monthTotal).toLocaleString() + ' ₽';
+        // Оплачено – заглушка
+      } catch (error) {
+        console.error('Ошибка загрузки финансов:', error);
+      }
+    }
+
+    loadFinance();
+  </script>
+</body>
+</html>
